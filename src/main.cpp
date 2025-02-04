@@ -712,30 +712,83 @@ Public License instead of this License.  But first, please read
 #include <imgui_impl_opengl3.h>
 #include <iostream>
 #include <thread>
-#include <atomic>
-#include <fstream>
-#include <algorithm>
-#include <vector>
+#include <atomic> 
+#include <fstream> //for file system managment
+#include <algorithm> //for alg
+#include <vector> 
 #include <string>
 #include <sys/sysctl.h>
-#include <sys/statvfs.h>
-#include <chrono>
+#include <sys/statvfs.h> 
+#include <chrono> //system functions
+#include <curl/curl.h> // libcurl for downloading
 
 // Window size for the music player window
 const int MUSIC_WINDOW_WIDTH = 800;
 const int MUSIC_WINDOW_HEIGHT = 600;
-
+bool showOnlineMenu = false; //control of menu is present
+static char urlBuffer[512] = ""; //buffer where link is placed
+static char filePath[512] = "";
 // Atomic flag to handle the play/stop state
 std::atomic<bool> isPlaying(false);
-std::string currentFile = "path/to/your/file.wav"; // Default file path (change this as needed)
+static std::string currentFile; // Default file path (change this as needed)
 std::atomic<float> songProgress(0.0f);  // To store song progress as a value between 0.0f and 1.0f
-
+//static char filePath[512];
 // Store favorites
+//path/to/your/file.wav
 std::vector<std::string> favoriteSongs;
 
 // Miniaudio engine
 ma_engine engine;
 std::atomic<float> volume(1.0f);  // Default volume (1.0f means 100% volume)
+
+
+
+size_t writeCallback(void* ptr, size_t size, size_t nmemb, void* stream) {
+    std::ofstream* out = static_cast<std::ofstream*>(stream);
+    out->write(static_cast<char*>(ptr), size * nmemb);
+    return size * nmemb;
+}
+
+
+
+
+void downloadFile(const std::string& url) {
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        std::cerr << "Failed to initialize CURL!" << std::endl;
+        return;
+    }
+
+    std::string filename = "downloaded_file"; // Default name
+    size_t pos = url.find_last_of('/');
+    if (pos != std::string::npos) {
+        filename = url.substr(pos + 1);
+    }
+
+    std::ofstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to create file: " << filename << std::endl;
+        return;
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
+    CURLcode res = curl_easy_perform(curl);
+
+    if (res != CURLE_OK) {
+        std::cerr << "Download failed: " << curl_easy_strerror(res) << std::endl;
+    } else {
+        std::cout << "Downloaded: " << filename << std::endl;
+    }
+
+    curl_easy_cleanup(curl);
+}
+
+
+
+
+
 
 // Initialize miniaudio
 void initializeAudio() {
@@ -831,6 +884,14 @@ float getDiskUsage() {
     return 100.0f - (float(stat.f_bfree) / float(stat.f_blocks) * 100.0f);
 }
 
+void dropCallback(GLFWwindow* window, int count, const char** paths) {
+    if (count > 0) {
+        std::strncpy(filePath, paths[0], sizeof(filePath) - 1); // Copy the first dropped file path
+        filePath[sizeof(filePath) - 1] = '\0'; // Ensure null termination
+        std::cout << "Dropped file: " << filePath << std::endl;
+    }
+}
+
 int main() {
     initializeAudio();
 
@@ -884,6 +945,10 @@ int main() {
     // Flag to toggle system monitor window
     bool showSystemMonitor = false;
     static ImVec4 bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); 
+
+  //static char filePath[256] = ""; // Buffer to store the file path DEPRECATED
+    
+    glfwSetDropCallback(window, dropCallback);
     // Main render loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -896,12 +961,20 @@ int main() {
 
         ImGui::Text("Enter the path to a .wav file");
 
+        
+    
+
         // Input box for the user to type the file path
-        char filePath[512];
-        strcpy(filePath, currentFile.c_str());
-        if (ImGui::InputText("File Path", filePath, IM_ARRAYSIZE(filePath))) {
-            currentFile = std::string(filePath);
-        }
+       // static char filePath[512];
+         if (ImGui::InputText("##filepath", filePath, sizeof(filePath))) {
+        currentFile = std::string(filePath); // Update current file when manually entered
+       }
+
+      if (std::strlen(filePath) > 0) {
+            ImGui::Text("Selected File: %s", filePath);
+      }
+    
+ 
 
         if (!currentFile.empty()) {
             ImGui::Text("Selected File: %s", currentFile.c_str());
@@ -960,14 +1033,33 @@ int main() {
             }
         }
 
+        if (ImGui::Button("Online")) {
+    showOnlineMenu = !showOnlineMenu;
+      }
+
         // Button to toggle system monitor window
         if (ImGui::Button("Toggle System Monitor")) {
             showSystemMonitor = !showSystemMonitor;
         }
+         
+        
 
         
 
-        ImGui::End();
+        if (showOnlineMenu) {
+    ImGui::Begin("Online Downloader", &showOnlineMenu);
+    ImGui::InputText("Enter URL", urlBuffer, sizeof(urlBuffer));
+    
+    if (ImGui::Button("Download")) {
+        std::string url(urlBuffer);
+        if (!url.empty()) {
+            std::thread downloadThread(downloadFile, url);
+            downloadThread.detach();
+        }
+    }
+
+    ImGui::End();
+        }
 
         // System Monitor Window
         if (showSystemMonitor) {
@@ -1002,6 +1094,7 @@ int main() {
 
             ImGui::End();
         }
+        ImGui::End();
 
         ImGui::Render();
           glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w); // Set clear color
@@ -1009,7 +1102,7 @@ int main() {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
-
+    
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -1018,6 +1111,7 @@ int main() {
     glfwTerminate();
 
     ma_engine_uninit(&engine); // Clean up miniaudio engine
-
+    
     return 0;
 }
+

@@ -18,6 +18,7 @@ set(IMGUI_BACKENDS
 # Find required libraries
 find_package(OpenGL REQUIRED)
 find_package(GLFW3 REQUIRED)
+find_package(CURL REQUIRED)
 
 # Include directories
 include_directories(include imgui imgui/backends /opt/homebrew/opt/openal-soft/include)
@@ -26,4 +27,4 @@ include_directories(include imgui imgui/backends /opt/homebrew/opt/openal-soft/i
 add_executable(main ${SRCS} ${IMGUI_SRC} ${IMGUI_BACKENDS} ${HEADERS})
 
 # Link libraries
-target_link_libraries(main PRIVATE glfw OpenGL::GL /opt/homebrew/opt/openal-soft/lib/libopenal.dylib)
+target_link_libraries(main PRIVATE glfw OpenGL::GL /opt/homebrew/opt/openal-soft/lib/libopenal.dylib CURL::libcurl)
