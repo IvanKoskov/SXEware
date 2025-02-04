@@ -1,8 +1,6 @@
 # SXEware
-[![C](https://img.shields.io/badge/C-orange.svg)](https://en.wikipedia.org/wiki/C%2B%2B)
 [![Platform](https://img.shields.io/badge/Platform-MacOS-blue.svg)](https://developer.apple.com/MacOS/)
 [![Platform](https://img.shields.io/badge/Platform-Linux-blue.svg)](https://www.linux.org/)
-[![License](https://img.shields.io/badge/License-GPL-green.svg)](https://opensource.org/licenses/GPL)
 
 
 <p align="center">
@@ -10,8 +8,8 @@
         <img src="https://img.shields.io/github/license/IvanKoskov/SXEware?style=for-the-badge">
     </a>
     </br>
-    <img src="https://img.shields.io/github/repo-size/IvanKoskov/Shellman?style=for-the-badge">
-    <img src="https://img.shields.io/depfu/dependencies/github/IvanKoskov/Shellman?style=for-the-badge" alt="">
+    <img src="https://img.shields.io/github/repo-size/IvanKoskov/SXEware?style=for-the-badge">
+    <img src="https://img.shields.io/depfu/dependencies/github/IvanKoskov/SXEware?style=for-the-badge" alt="">
     <img src="https://img.shields.io/github/languages/top/IvanKoskov/Shellman?style=for-the-badge" alt="Language Badge">
     <a href="https://github.com/IvanKoskov/Shellman/actions">
         <img src="https://img.shields.io/github/workflow/status/IvanKoskov/Shellman/CI?style=for-the-badge" alt="Build Status">
