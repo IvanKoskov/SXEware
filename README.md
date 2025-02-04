@@ -36,7 +36,7 @@ A lightweight tool for listening to music across different platforms.
 - **Operating System:** macOS, Linux, or Windows (manual adjustments required).
 - **Compiler:** C++17 or later.
 - **Build System:** CMake.
-- > [!IMPORTANT]
+> [!IMPORTANT]
 > You need to fully setup IMGUI on your machine from the official repository before proceeding with custom builds or etc.
 
 ## Installation & Usage
