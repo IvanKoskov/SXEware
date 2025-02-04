@@ -45,5 +45,5 @@ Modify this path in the settings or source code to change the default music dire
 Feel free to extend and modify this project to suit your needs. Contributions are welcome!
 
 ## Licence
-Read the GitHub page
+GPL
 
