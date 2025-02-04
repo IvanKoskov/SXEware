@@ -773,7 +773,6 @@ ma_engine engine;
 std::atomic<float> volume(1.0f);  // Default volume (1.0f means 100% volume)
 
 
-
 void displaySongDropdown() {
     // Get the home directory
     const char* homeDir = std::getenv("HOME");
@@ -792,8 +791,12 @@ void displaySongDropdown() {
     // Iterate through the directory and collect file names and paths
     for (const auto& entry : std::filesystem::directory_iterator(songsDir)) {
         if (entry.is_regular_file()) {
-            songs.push_back(entry.path().filename().string());
-            songPaths.push_back(entry.path().string());
+            std::string extension = entry.path().extension().string();
+            // Allow both .wav and .mp3 files
+            if (extension == ".wav" || extension == ".mp3") {
+                songs.push_back(entry.path().filename().string());
+                songPaths.push_back(entry.path().string());
+            }
         }
     }
 
@@ -804,6 +807,7 @@ void displaySongDropdown() {
             bool isSelected = (selectedSongIndex == i);
             if (ImGui::Selectable(songs[i].c_str(), isSelected)) {
                 selectedSongIndex = i;
+                currentFile = songPaths[i]; // Update the current file path
             }
             if (isSelected) {
                 ImGui::SetItemDefaultFocus();
@@ -822,11 +826,9 @@ void displaySongDropdown() {
     // Display the file path in an input box
     ImGui::InputText("Selected Song Path", filePath, sizeof(filePath), ImGuiInputTextFlags_ReadOnly);
 
-    // Optionally, print the selected song path
-    if (selectedSongIndex >= 0) {
-        std::cout << "Selected song path: " << songPaths[selectedSongIndex] << std::endl;
-    }
+  
 }
+
 
 
 void OpenURL(const char* url) {
@@ -946,19 +948,23 @@ void removeFavorite(const std::string& songToRemove) {
     saveFavorites();  // Save the updated list after removal
 }
 
-// Function for initializing the audio engine and playing sound
 void playSound() {
-    ma_engine_stop(&engine); // Stop the engine before re-initializing
-    ma_engine_uninit(&engine); // Uninitialize the engine
+    std::string extension = currentFile.substr(currentFile.find_last_of(".") + 1);
+    if (extension != "wav" && extension != "mp3") {
+        std::cerr << "Unsupported file format: " << extension << std::endl;
+        return;
+    }
 
-    // Reinitialize the engine
+    ma_engine_stop(&engine); 
+    ma_engine_uninit(&engine); 
+
     if (ma_engine_init(NULL, &engine) != MA_SUCCESS) {
         std::cerr << "Failed to reinitialize miniaudio engine!" << std::endl;
         return;
     }
-    ma_engine_set_volume(&engine, volume.load());  // Set initial volume
+    ma_engine_set_volume(&engine, volume.load()); 
 
-    ma_result result = ma_engine_play_sound(&engine, currentFile.c_str(), NULL); // Play the selected file
+    ma_result result = ma_engine_play_sound(&engine, currentFile.c_str(), NULL);
     if (result != MA_SUCCESS) {
         std::cerr << "Failed to play sound!" << std::endl;
         return;
@@ -967,18 +973,30 @@ void playSound() {
     std::cout << "Playing sound..." << std::endl;
     isPlaying.store(true);
 
-    // Simulate progress (replace with actual progress tracking)
     float progress = 0.0f;
-    while (isPlaying.load() && progress < 1.0f) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        progress += 0.01f;
+    auto startTime = std::chrono::steady_clock::now();
+    
+    while (isPlaying.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        // Calculate realistic progress based on time elapsed
+        auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                               std::chrono::steady_clock::now() - startTime)
+                               .count();
+        float duration = 120.0f; // Fake total song duration (change this later)
+        progress = std::min(elapsedTime / (duration * 1000.0f), 1.0f);
+
         songProgress.store(progress);
+        
+        if (progress >= 1.0f) {
+            break; // Stop updating progress but don't stop playback here
+        }
     }
 
-    ma_engine_stop(&engine); // Stop playback
     isPlaying.store(false);
-    std::cout << "Music stopped." << std::endl;
+    std::cout << "Music ended." << std::endl;
 }
+
 
 // Function to get CPU usage (placeholder)
 float getCPUUsage() {
@@ -1003,9 +1021,16 @@ float getDiskUsage() {
 
 void dropCallback(GLFWwindow* window, int count, const char** paths) {
     if (count > 0) {
-        std::strncpy(filePath, paths[0], sizeof(filePath) - 1); // Copy the first dropped file path
-        filePath[sizeof(filePath) - 1] = '\0'; // Ensure null termination
-        std::cout << "Dropped file: " << filePath << std::endl;
+        std::string filePathStr(paths[0]);
+        std::string extension = filePathStr.substr(filePathStr.find_last_of(".") + 1);
+        if (extension == "wav" || extension == "mp3") {
+            std::strncpy(filePath, paths[0], sizeof(filePath) - 1); // Copy the first dropped file path
+            filePath[sizeof(filePath) - 1] = '\0'; // Ensure null termination
+            currentFile = filePathStr; // Update the current file
+            std::cout << "Dropped file: " << filePath << std::endl;
+        } else {
+            std::cerr << "Unsupported file format: " << extension << std::endl;
+        }
     }
 }
 
@@ -1097,15 +1122,14 @@ int main() {
                 soundThread.detach();
             }
 
-            if (ImGui::Button("Stop") && isPlaying.load()) {
+            if (ImGui::Button("Stop (will restart)") && isPlaying.load()) {
                 isPlaying.store(false);
                 ma_engine_stop(&engine);
             }
 
-            float currentProgress = songProgress.load();  // Get current progress value
-            if (ImGui::SliderFloat("Song Progress", &currentProgress, 0.0f, 1.0f, "%.3f")) {
-                songProgress.store(currentProgress); // Update the progress
-            }
+  float currentProgress = songProgress.load();
+ImGui::Text("Song Progress:");
+ImGui::ProgressBar(currentProgress, ImVec2(0.0f, 10.0f)); // Visual only
 
             float currentVolume = volume.load();  // Load the atomic value into a regular float
             ImGui::Text("Volume");
