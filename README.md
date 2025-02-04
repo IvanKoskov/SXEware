@@ -6,8 +6,8 @@
 
 
 <p align="center">
-    <a href="https://github.com/IvanKoskov/Shellman/blob/main/LICENSE">
-        <img src="https://img.shields.io/github/license/IvanKoskov/Shellman?style=for-the-badge">
+    <a href="https://github.com/IvanKoskov/SXEware/blob/main/LICENSE">
+        <img src="https://img.shields.io/github/license/IvanKoskov/SXEware?style=for-the-badge">
     </a>
     </br>
     <img src="https://img.shields.io/github/repo-size/IvanKoskov/Shellman?style=for-the-badge">
