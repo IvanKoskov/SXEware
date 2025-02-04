@@ -134,6 +134,13 @@ This document lists all the dependencies required for the music player project, 
      vcpkg install mpg123  # Windows
      ```
 
+### 9. **Different headers and etc**
+   - **Purpose:** Additional sound support
+
+     ```sh
+    #include "header.h"
+     ```
+
 ## Build Instructions
 Make sure all dependencies are installed and then build using CMake:
 
