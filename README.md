@@ -20,6 +20,9 @@
 </p>
 
 
+<img width="793" alt="Image" src="https://github.com/user-attachments/assets/be38f692-ef41-420b-b985-94448f5f10a8" />
+
+
 
 A lightweight tool for listening to music across different platforms.
 
