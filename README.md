@@ -28,9 +28,10 @@ A lightweight tool for listening to music across different platforms.
 ## Features
 - Play music from local files and online sources.
 - Save your favorite tracks.
-- Load playlists from files.
+- Load favorites from files.
 - Full support for free music and streaming websites.
 - Clean and customizable interface using OpenGL (ImGui, C).
+- Drag and Drop cross platform support! Open from anywhere.
 
 ## Requirements
 - **Operating System:** macOS, Linux, or Windows (manual adjustments required).
