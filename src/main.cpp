@@ -721,6 +721,7 @@ Public License instead of this License.  But first, please read
 #include <sys/statvfs.h> 
 #include <chrono> //system functions
 #include <curl/curl.h> // libcurl for downloading
+#include <cstdlib>
 
 // Window size for the music player window
 const int MUSIC_WINDOW_WIDTH = 800;
@@ -743,31 +744,117 @@ std::atomic<float> volume(1.0f);  // Default volume (1.0f means 100% volume)
 
 
 
+void displaySongDropdown() {
+    // Get the home directory
+    const char* homeDir = std::getenv("HOME");
+    if (!homeDir) {
+        std::cerr << "Unable to get home directory!" << std::endl;
+        return;
+    }
+
+    // Define the path to the SXEwareSongs directory
+    std::string songsDir = std::string(homeDir) + "/SXEwareSongs/";
+
+    // Vector to hold song file names and their full paths
+    std::vector<std::string> songs;
+    std::vector<std::string> songPaths;
+
+    // Iterate through the directory and collect file names and paths
+    for (const auto& entry : std::filesystem::directory_iterator(songsDir)) {
+        if (entry.is_regular_file()) {
+            songs.push_back(entry.path().filename().string());
+            songPaths.push_back(entry.path().string());
+        }
+    }
+
+    // Dropdown for song selection
+    static int selectedSongIndex = -1;
+    if (ImGui::BeginCombo("Select Song", selectedSongIndex == -1 ? "None" : songs[selectedSongIndex].c_str())) {
+        for (int i = 0; i < songs.size(); ++i) {
+            bool isSelected = (selectedSongIndex == i);
+            if (ImGui::Selectable(songs[i].c_str(), isSelected)) {
+                selectedSongIndex = i;
+            }
+            if (isSelected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    // Input box to display the file path of the selected song
+    static char filePath[512] = ""; // Buffer to store the file path
+    if (selectedSongIndex >= 0) {
+        // Update the input box with the full file path of the selected song
+        std::strncpy(filePath, songPaths[selectedSongIndex].c_str(), sizeof(filePath) - 1);
+    }
+
+    // Display the file path in an input box
+    ImGui::InputText("Selected Song Path", filePath, sizeof(filePath), ImGuiInputTextFlags_ReadOnly);
+
+    // Optionally, print the selected song path
+    if (selectedSongIndex >= 0) {
+        std::cout << "Selected song path: " << songPaths[selectedSongIndex] << std::endl;
+    }
+}
+
+
+void OpenURL(const char* url) {
+    #ifdef _WIN32
+        ShellExecuteA(0, "open", url, 0, 0 , SW_SHOWNORMAL);
+    #elif __APPLE__
+        system(("open " + std::string(url)).c_str());
+    #else
+        system(("xdg-open " + std::string(url)).c_str());
+    #endif
+}
+
+
+
 size_t writeCallback(void* ptr, size_t size, size_t nmemb, void* stream) {
     std::ofstream* out = static_cast<std::ofstream*>(stream);
     out->write(static_cast<char*>(ptr), size * nmemb);
     return size * nmemb;
 }
 
-
-
-
 void downloadFile(const std::string& url) {
-    CURL* curl = curl_easy_init();
-    if (!curl) {
-        std::cerr << "Failed to initialize CURL!" << std::endl;
+    // Get the home directory from the environment variable
+    const char* homeDir = std::getenv("HOME");
+    if (!homeDir) {
+        std::cerr << "Unable to get home directory!" << std::endl;
         return;
     }
 
+    // Create the path for the SXEwareSongs folder in the home directory
+    std::string downloadDir = std::string(homeDir) + "/SXEwareSongs/";
+
+    // Create the directory if it doesn't exist
+    if (std::system(("mkdir -p \"" + downloadDir + "\"").c_str()) != 0) {
+        std::cerr << "Failed to create directory: " << downloadDir << std::endl;
+        return;
+    }
+
+    // Get the file name from the URL
     std::string filename = "downloaded_file"; // Default name
     size_t pos = url.find_last_of('/');
     if (pos != std::string::npos) {
         filename = url.substr(pos + 1);
     }
 
-    std::ofstream file(filename, std::ios::binary);
+    // Full path for the downloaded file
+    std::string filePath = downloadDir + filename;
+
+    // Open file for writing
+    std::ofstream file(filePath, std::ios::binary);
     if (!file) {
-        std::cerr << "Failed to create file: " << filename << std::endl;
+        std::cerr << "Failed to create file: " << filePath << std::endl;
+        return;
+    }
+
+    // Initialize CURL
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        std::cerr << "Failed to initialize CURL!" << std::endl;
         return;
     }
 
@@ -779,7 +866,7 @@ void downloadFile(const std::string& url) {
     if (res != CURLE_OK) {
         std::cerr << "Download failed: " << curl_easy_strerror(res) << std::endl;
     } else {
-        std::cout << "Downloaded: " << filename << std::endl;
+        std::cout << "Downloaded: " << filePath << std::endl;
     }
 
     curl_easy_cleanup(curl);
@@ -924,11 +1011,9 @@ int main() {
     }
 
     // Initialize ImGui
-        // Initialize ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
-    // Set initial ImGui window background to match the clear color
     ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -944,11 +1029,11 @@ int main() {
 
     // Flag to toggle system monitor window
     bool showSystemMonitor = false;
-    static ImVec4 bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); 
+    bool showAboutwin = false;
+    static ImVec4 bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-  //static char filePath[256] = ""; // Buffer to store the file path DEPRECATED
-    
     glfwSetDropCallback(window, dropCallback);
+
     // Main render loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -959,22 +1044,19 @@ int main() {
         // Main window with music player controls
         ImGui::Begin("Music Player");
 
+        // Display the dropdown for selecting songs
+        displaySongDropdown();
+
         ImGui::Text("Enter the path to a .wav file");
 
-        
-    
-
         // Input box for the user to type the file path
-       // static char filePath[512];
-         if (ImGui::InputText("##filepath", filePath, sizeof(filePath))) {
-        currentFile = std::string(filePath); // Update current file when manually entered
-       }
+        if (ImGui::InputText("##filepath", filePath, sizeof(filePath))) {
+            currentFile = std::string(filePath); // Update current file when manually entered
+        }
 
-      if (std::strlen(filePath) > 0) {
+        if (std::strlen(filePath) > 0) {
             ImGui::Text("Selected File: %s", filePath);
-      }
-    
- 
+        }
 
         if (!currentFile.empty()) {
             ImGui::Text("Selected File: %s", currentFile.c_str());
@@ -1011,7 +1093,6 @@ int main() {
             ImGui::Text("No file selected.");
         }
 
-        // Display the favorites table
         if (!favoriteSongs.empty()) {
             ImGui::Text("Favorite Songs:");
             if (ImGui::BeginTable("FavoritesTable", 2)) {
@@ -1034,32 +1115,71 @@ int main() {
         }
 
         if (ImGui::Button("Online")) {
-    showOnlineMenu = !showOnlineMenu;
-      }
+            showOnlineMenu = !showOnlineMenu;
+        }
+
+  
 
         // Button to toggle system monitor window
         if (ImGui::Button("Toggle System Monitor")) {
             showSystemMonitor = !showSystemMonitor;
         }
-         
-        
-
-        
 
         if (showOnlineMenu) {
-    ImGui::Begin("Online Downloader", &showOnlineMenu);
-    ImGui::InputText("Enter URL", urlBuffer, sizeof(urlBuffer));
-    
-    if (ImGui::Button("Download")) {
-        std::string url(urlBuffer);
-        if (!url.empty()) {
-            std::thread downloadThread(downloadFile, url);
-            downloadThread.detach();
+            ImGui::Begin("Online Downloader", &showOnlineMenu);
+            ImGui::InputText("Enter URL", urlBuffer, sizeof(urlBuffer));
+
+            if (ImGui::Button("Download")) {
+                std::string url(urlBuffer);
+                if (!url.empty()) {
+                    std::thread downloadThread(downloadFile, url);
+                    downloadThread.detach();
+                }
+            }
+
+            ImGui::End();
         }
+
+        float window_width = ImGui::GetWindowWidth();
+
+        // Set the cursor position to center the button on the X-axis
+    ImGui::SetCursorPosX((window_width - ImGui::CalcTextSize("Press Me").x) * 0.5f);
+
+
+         if (ImGui::Button("About the Authors")) {
+        // Open a small window when the button is pressed
+        showAboutwin = !showAboutwin;
+       
+    }
+
+   if (showAboutwin) {
+    ImGui::Begin("Thanks to", &showAboutwin);
+
+    ImGui::Text("App Developed by:");
+    ImGui::Spacing();
+
+    // Name and roles
+    ImGui::Text("EvanMatthew (aka Ivan Koskov) - GUI Designer & Developer");
+    ImGui::Text("Adk - Functionality Expert & Developer");
+
+    // Fun part
+    ImGui::Spacing();
+    ImGui::TextColored(ImVec4(0.7f, 0.5f, 1.0f, 1.0f), "Together, we make magic happen!");
+    ImGui::Text("Our collaboration brings the perfect balance of beauty and functionality!");
+
+    // Fun message with icon
+    ImGui::Spacing();
+    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Powered by code and coffee ☕✨");
+
+    // Cool styled GitHub button
+    ImGui::Spacing();
+    if (ImGui::Button("Check out our GitHub!")) {
+        // Open GitHub link in the default browser
+        OpenURL("https://github.com/IvanKoskov/SXEware");
     }
 
     ImGui::End();
-        }
+}
 
         // System Monitor Window
         if (showSystemMonitor) {
@@ -1097,12 +1217,12 @@ int main() {
         ImGui::End();
 
         ImGui::Render();
-          glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w); // Set clear color
+        glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w); // Set clear color
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
-    
+
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -1111,7 +1231,6 @@ int main() {
     glfwTerminate();
 
     ma_engine_uninit(&engine); // Clean up miniaudio engine
-    
+
     return 0;
 }
-
