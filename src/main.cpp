@@ -717,6 +717,9 @@ Public License instead of this License.  But first, please read
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <sys/sysctl.h>
+#include <sys/statvfs.h>
+#include <chrono>
 
 // Window size for the music player window
 const int MUSIC_WINDOW_WIDTH = 800;
@@ -807,6 +810,27 @@ void playSound() {
     std::cout << "Music stopped." << std::endl;
 }
 
+// Function to get CPU usage (placeholder)
+float getCPUUsage() {
+    return rand() % 100; // Replace this with actual CPU calculation
+}
+
+// Function to get RAM usage
+float getRAMUsage() {
+    int64_t memFree, memTotal;
+    size_t size = sizeof(memTotal);
+    sysctlbyname("hw.memsize", &memTotal, &size, NULL, 0);
+    sysctlbyname("vm.page_free_count", &memFree, &size, NULL, 0);
+    return 100.0f - (float(memFree) / float(memTotal) * 100.0f);
+}
+
+// Function to get disk usage
+float getDiskUsage() {
+    struct statvfs stat;
+    if (statvfs("/", &stat) != 0) return 0.0f;
+    return 100.0f - (float(stat.f_bfree) / float(stat.f_blocks) * 100.0f);
+}
+
 int main() {
     initializeAudio();
 
@@ -839,15 +863,27 @@ int main() {
     }
 
     // Initialize ImGui
+        // Initialize ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
+    // Set initial ImGui window background to match the clear color
+    ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
 
     // Load saved favorites at startup
     loadFavorites();
 
+    // Data buffers for system monitor
+    std::vector<float> cpuHistory(100, 0.0f);
+    std::vector<float> ramHistory(100, 0.0f);
+    std::vector<float> diskHistory(100, 0.0f);
+
+    // Flag to toggle system monitor window
+    bool showSystemMonitor = false;
+    static ImVec4 bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); 
     // Main render loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -924,10 +960,51 @@ int main() {
             }
         }
 
+        // Button to toggle system monitor window
+        if (ImGui::Button("Toggle System Monitor")) {
+            showSystemMonitor = !showSystemMonitor;
+        }
+
+        
+
         ImGui::End();
 
+        // System Monitor Window
+        if (showSystemMonitor) {
+            ImGui::Begin("System Monitor", &showSystemMonitor);
+
+            // Update data
+            cpuHistory.erase(cpuHistory.begin());
+            ramHistory.erase(ramHistory.begin());
+            diskHistory.erase(diskHistory.begin());
+            cpuHistory.push_back(getCPUUsage());
+            ramHistory.push_back(getRAMUsage());
+            diskHistory.push_back(getDiskUsage());
+
+            // CPU
+            ImGui::Text("CPU Usage: %.1f%%", cpuHistory.back());
+            ImGui::PlotLines("##CPU", cpuHistory.data(), cpuHistory.size(), 0, nullptr, 0.0f, 100.0f, ImVec2(0, 50));
+
+            // RAM
+            ImGui::Text("RAM Usage: %.1f%%", ramHistory.back());
+            ImGui::PlotLines("##RAM", ramHistory.data(), ramHistory.size(), 0, nullptr, 0.0f, 100.0f, ImVec2(0, 50));
+
+            // Disk
+            ImGui::Text("Disk Usage: %.1f%%", diskHistory.back());
+            ImGui::PlotLines("##Disk", diskHistory.data(), diskHistory.size(), 0, nullptr, 0.0f, 100.0f, ImVec2(0, 50));
+
+            ImGui::Separator();
+            ImGui::Text("Theme");
+            if (ImGui::ColorEdit3("Background Color", (float*)&bgColor)) {
+                // Update ImGui's window background color
+                ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = bgColor;
+            }
+
+            ImGui::End();
+        }
+
         ImGui::Render();
-        glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
+          glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w); // Set clear color
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
