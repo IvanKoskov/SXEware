@@ -34,7 +34,7 @@ A lightweight tool for listening to music across different platforms.
 ## Default Music Directory
 By default, the application looks for music in:
 ```
-/Users/evan/Musics/Metamorphosis.wav
+/Users/yourname/Musics/Metamorphosis.wav
 ```
 Modify this path in the settings or source code to change the default music directory.
 
