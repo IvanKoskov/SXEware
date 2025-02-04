@@ -14,10 +14,10 @@
     <a href="https://github.com/IvanKoskov/Shellman/actions">
         <img src="https://img.shields.io/github/workflow/status/IvanKoskov/Shellman/CI?style=for-the-badge" alt="Build Status">
     </a>
-    <img src="https://img.shields.io/github/issues/IvanKoskov/Shellman?style=for-the-badge" alt="Issues">
-    <img src="https://img.shields.io/github/issues-pr/IvanKoskov/Shellman?style=for-the-badge" alt="Pull Requests">
-    <img src="https://img.shields.io/github/contributors/IvanKoskov/Shellman?style=for-the-badge" alt="Contributors">
-    <img src="https://img.shields.io/github/last-commit/IvanKoskov/Shellman?style=for-the-badge" alt="Last Commit">
+    <img src="https://img.shields.io/github/issues/IvanKoskov/SXEware?style=for-the-badge" alt="Issues">
+    <img src="https://img.shields.io/github/issues-pr/IvanKoskov/SXEware?style=for-the-badge" alt="Pull Requests">
+    <img src="https://img.shields.io/github/contributors/IvanKoskov/SXEware?style=for-the-badge" alt="Contributors">
+    <img src="https://img.shields.io/github/last-commit/IvanKoskov/SXEware?style=for-the-badge" alt="Last Commit">
 </p>
 
 
