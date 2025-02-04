@@ -1,4 +1,7 @@
 # SXEware
+[![C](https://img.shields.io/badge/Swift-5.5-orange.svg)](https://swift.org)
+[![Platform](https://img.shields.io/badge/Platform-MacOS-blue.svg)](https://developer.apple.com/MacOS/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 A lightweight tool for listening to music across different platforms.
 
 ## Features
