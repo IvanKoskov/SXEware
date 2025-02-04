@@ -8,7 +8,6 @@
         <img src="https://img.shields.io/github/license/IvanKoskov/SXEware?style=for-the-badge">
     </a>
     </br>
-    <img src="https://img.shields.io/github/repo-size/IvanKoskov/SXEware?style=for-the-badge">
     <img src="https://img.shields.io/depfu/dependencies/github/IvanKoskov/SXEware?style=for-the-badge" alt="">
     <img src="https://img.shields.io/github/languages/top/IvanKoskov/SXEware?style=for-the-badge" alt="Language Badge">
     <a href="https://github.com/IvanKoskov/Shellman/actions">
