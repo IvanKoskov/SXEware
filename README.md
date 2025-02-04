@@ -1,5 +1,5 @@
 # SXEware
-[![C](https://img.shields.io/badge/Swift-5.5-orange.svg)](https://swift.org)
+[![C](https://img.shields.io/badge/C-orange.svg)](https://swift.org)
 [![Platform](https://img.shields.io/badge/Platform-MacOS-blue.svg)](https://developer.apple.com/MacOS/)
 [![Platform](https://img.shields.io/badge/Platform-Linux-blue.svg)](https://www.linux.org/)
 [![License](https://img.shields.io/badge/License-GPL-green.svg)](https://opensource.org/licenses/GPL)
