@@ -1,25 +1,46 @@
 # SXEware
-
-Tool for listening music on different platforms.
-
+A lightweight tool for listening to music across different platforms.
 
 ## Features
-
- Basic functionality + Save your favourites + Load from files + total support for free music and websites with it + clear interafce written in OpenGL(imgui, C).
-
+- Play music from local files and online sources.
+- Save your favorite tracks.
+- Load playlists from files.
+- Full support for free music and streaming websites.
+- Clean and customizable interface using OpenGL (ImGui, C).
 
 ## Requirements
-- macOS, Linux or Windows (requires manual changes)
-- C++17 or later
-- CMake
--make
+- **Operating System:** macOS, Linux, or Windows (manual adjustments required).
+- **Compiler:** C++17 or later.
+- **Build System:** CMake.
 
-## How to use
-1. Clone the repository.
-2. Build the project using CMake.
-3. Start customizing the ImGui interface for your application.
-4. If you are on linux or MacOS just use the main executable
+## Installation & Usage
+1. **Clone the repository:**  
+   ```sh
+   git clone https://github.com/your-repo/SXEware.git
+   cd SXEware
+   ```
+2. **Build the project using CMake:**  
+   ```sh
+   mkdir build && cd build
+   cmake ..
+   make
+   ```
+3. **Run the application:**  
+   - On **Linux/macOS**: Use the generated executable.
+   - On **Windows**: Adjust paths and dependencies manually.
 
-Feel free to extend and modify this template for your own projects!
+4. **Customize the ImGui interface** to fit your needs.
 
-Songs - /Users/evan/Musics/Metamorphosis.wav
+## Default Music Directory
+By default, the application looks for music in:
+```
+/Users/evan/Musics/Metamorphosis.wav
+```
+Modify this path in the settings or source code to change the default music directory.
+
+## Contributing
+Feel free to extend and modify this project to suit your needs. Contributions are welcome!
+
+## Licence
+Read the GitHub page
+
