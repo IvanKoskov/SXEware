@@ -21,6 +21,8 @@
 
 <img width="793" alt="Image" src="https://github.com/user-attachments/assets/be38f692-ef41-420b-b985-94448f5f10a8" />
 
+<img width="799" alt="Image" src="https://github.com/user-attachments/assets/033170df-a8ac-44cf-9de7-1a1d3990e47d" />
+
 
 
 A lightweight tool for listening to music across different platforms.
