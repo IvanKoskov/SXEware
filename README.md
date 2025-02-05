@@ -34,6 +34,14 @@ A lightweight tool for listening to music across different platforms.
 - Full support for free music and streaming websites.
 - Clean and customizable interface using OpenGL (ImGui, C).
 - Drag and Drop cross platform support! Open from anywhere.
+- Archive of songs that can be instantly opened from the tool itself
+- Change the color of the app by using theme options
+
+  ## Will be added
+  - Formatting
+  - Positioing windows
+  -etc
+
 
 ## Requirements
 - **Operating System:** macOS, Linux, or Windows (manual adjustments required).
