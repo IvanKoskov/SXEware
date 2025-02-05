@@ -36,6 +36,7 @@ A lightweight tool for listening to music across different platforms.
 - Drag and Drop cross platform support! Open from anywhere.
 - Archive of songs that can be instantly opened from the tool itself
 - Change the color of the app by using theme options
+- Support for Mp3, Wav formats
 
   ## Will be added
   - Formatting
